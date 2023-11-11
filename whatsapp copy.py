@@ -43,7 +43,7 @@ myfile.close()
         else:
 print(f'{counts} groups have been added to the list.')
 #scrolls down in the element holding the chats
-driver.execute_script('document.getElementById("pane-side").scrollTop += clientHeight', "")
+driver.execute_script('document.getElementById("pane-side").scrollTop +='str(chatelement_height))
 break
 
 while driver.execute_script('document.getElementById('pane-side').scrollTop') != chatelement_scrollheight:
@@ -54,4 +54,4 @@ break
 
 
 
-
+
