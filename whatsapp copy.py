@@ -5,45 +5,53 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.action_chains import ActionChains
 import time
-    
-chats = []
+
 
 options = webdriver.ChromeOptions()
 driver = webdriver.Chrome(options=options)
 driver.get('https://web.whatsapp.com/')
-wait = WebDriverWait(driver, 20)
+WebDriverWait(driver, 15)
 actions = ActionChains(driver)
 
-# this tells the script to wait until the search bar has been fully loaded and after that wait another 3 seconds to be sure
-wait.until(EC.presence_of_element_located((By.XPATH, "/html/body/div[1]/div/div/div[4]/div/div[1]/div/div[2]/button/div[2]")))
-time.sleep(5)
+# this tells the script to wait until the search bar has been fully loaded
+wait.until(EC.presence_of_element_located((By.XPATH, "/html/body/div[1]/div/div/div[4]/div/div[1]/div/div[2]/button/div[2]")))
 
-#This finds the element the chats are contained in and scrolls down to the bottom of the element to load all chats into its memory
-scroll = driver.find_element(By.ID,'pane-side')
+#This finds the element the chats are contained in
+chatlist = driver.find_element(By.ID,'pane-side')
 
-counts = 1
+#gets the current height of the element the chats are in
+chatelement_height = chatlist.get_property("clientHeight")
 
-while True:
-    #finds all chats instances according to their CSS Class and stores them in a variable
+chatelement_scrollheight = chatlist.get_property("scrollHeight")
+
+#function to find chats and get the chat name, check if it starts with a + and adds it to file containing chat names if true
+def get_chatnames():
+    #finds all instances of the element holding the chat title in current viewport
     all_elements = driver.find_elements(By.CLASS_NAME, '_21S-L')
-    #For loop to go over every instance of a chat found and takes the groupname and adds it to a list
+counts = 0
+
+    #For loop to go over every instance of a chat found and get the title
     for element in all_elements:
         firstelement = element.find_element(By.TAG_NAME, 'span')
         title = firstelement.get_attribute('title')
-        if not title.startswith('+') and title not in chats:
+        if not title.startswith('+'):
             counts += 1
-            chats.append(title)
+myfile = open('groupchat.txt', 'a')
+            myfile.write(title)
+myfile.close()
             print(f'{title} has been added to the list')
-    else:
-        print(f'No more elements found. {counts} groups have been added to the list')
-        with open('groupchats.txt', 'a') as myfile:
-            for i in chats:
-                try:
-                    myfile.write(i + '\n')
-                except:
-                    pass
+        else:
+print(f'{counts} groups have been added to the list.')
+#scrolls down in the element holding the chats
+driver.execute_script('document.getElementById("pane-side").scrollTop += clientHeight', "")
+break
+
+while driver.execute_script('document.getElementById('pane-side').scrollTop') != chatelement_scrollheight:
+get_chatnames(chatlist)
+else:
+print('The bottom of the active chat list has been reached and all groups should have been added.')
+break
 
 
-    scroll_height = scroll.get_property("clientHeight")
-    driver.execute_script('document.getElementById("pane-side").scrollTop += ' + str(scroll_height), "")
-    time.sleep(1)
+
+
