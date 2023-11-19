@@ -81,7 +81,7 @@ def Find_Add_Member_Button():
     else:
         time.sleep(2)
         actions.move_to_element(Add).click().perform()
-        actions.send_keys(contact_name).perform()
+        actions.send_keys(contact_name).pause(1).send_keys(Keys.ENTER).perform()
         print('Opened Add member button 1')
         time.sleep(2)
         return True
@@ -106,18 +106,21 @@ def Member_In_Group():
             return False
 
             
-
-"""        
+        
 def Member_not_in_group():
+    print('Adding member to group')
     confirm = driver.find_element(By.CSS_SELECTOR, "span[aria-label='Bevestigen']")
     actions.move_to_element(confirm).click().perform()
-    WebDriverWait(driver, 10).until(EC.visibility_of(By.XPATH, '//div[contains(Text(), "Lid toevoegen")]'))
-    confirm2 = driver.find_element(By.XPATH, '//div[contains(Text(), "Lid toevoegen")]')
+    print('Confirmed first time')
+    time.sleep(2)    
+    confirm2 = driver.find_element(By.XPATH, '//*[@id="app"]/div/span[2]/div/span/div/div/div/div/div/div[2]/div/button[2]')
     actions.move_to_element(confirm2).click().perform()
+    print('Confirmed second time')
     time.sleep(2)
+    print('Member added to hroup succesfully')
     zoekenannuleren = driver.find_element(By.CSS_SELECTOR, "button[aria-label='Zoeken annuleren']")
     actions.move_to_element(zoekenannuleren).click().perform()
-"""
+
 
 
 for line in myfile:
@@ -139,6 +142,7 @@ for line in myfile:
                     print('Member allready in group 2')
                 else:
                     print('Member not in group 2')
+                    Member_not_in_group()
             else:
                 print('Could not find add button 2')
         else:
