@@ -6,8 +6,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.action_chains import ActionChains
 import time
 
-
-contact_name = input('Which contact needs to be added?')
+contact_name= input('Which contact needs to be added?')
 
 options = webdriver.ChromeOptions()
 driver = webdriver.Chrome(options=options)
@@ -15,115 +14,138 @@ driver.get('https://web.whatsapp.com/')
 actions = ActionChains(driver)
 
 WebDriverWait(driver, 60).until(EC.presence_of_element_located((By.CSS_SELECTOR,"div[title='Tekstvak zoekopdracht']")))
-myfile = open('filteredchats.txt', 'r')
+myfile = open('chats.txt', 'r')
 success = open('success.txt', 'a')
 failed = open('failed.txt', 'a')
 
-for line in myfile:
-
-#This looks for the searchbar
+def Search():
+    print('Moving to search bar')
+    time.sleep(2)
+    #This looks for the searchbar
     search = driver.find_element(By.CSS_SELECTOR, "div[title='Tekstvak zoekopdracht']")
-    #This clears the searchbar from any text
+    #This moves the cursor to the searchbar, clicks it
+    actions.move_to_element(search).click().pause(1).send_keys(line).send_keys(Keys.ENTER).perform()
+    print('Searchbar found')
+
+def No_Chats_Found():
+    print('Looking for chats')
     time.sleep(2)
-    #This moves the cursor to the searchbar, clicks it, sends a string to type and presses enter to submit
-    actions.move_to_element(search).click().send_keys(line).send_keys(Keys.ENTER).perform()
-    time.sleep(2)
-    try: 
-        nochatsfound = driver.find_element(By.XPATH, "//span[contains(text(), 'Geen chats,')]")
+    try:
+        nochatsfound = driver.find_element(By.XPATH, "//span[contains(text(), 'Geen chats')]")
+    except:    
+        print('found group 1')
+        return False
+    else:
         if nochatsfound.is_displayed():
             print(f'Unable to find {line} in chatlist, continuing with the next group from list.')
-            failed.write(f'\n{line}-> Unable to find chat in chatlist.')
             time.sleep(2)
             zoekenannuleren = driver.find_element(By.CSS_SELECTOR, "button[aria-label='Zoeken annuleren']")
             actions.move_to_element(zoekenannuleren).click().perform()
-            continue
-    except:
-        pass
-        
-    try:
-        #this finds the instance of the menu button
-        menu = driver.find_element(By.CSS_SELECTOR, "div[role='button'][data-tab='6'][title='Menu']")
-        #This moves the cursor to the menu button and clicks it
-        actions.move_to_element(menu).click().perform()
-        time.sleep(2)
-    except:
-        print(f'Unable to find menu button for {line}')
-        failed.write(f'{line}-> unable to find menu button')
-        continue
+            time.sleep(2)
+            return True
 
+def Open_Menu():
+    print('Looking for menu button')
+    time.sleep(2)
+    #this finds the instance of the menu button
+    menu = driver.find_element(By.CSS_SELECTOR, "div[role='button'][data-tab='6'][title='Menu']")
+    #This moves the cursor to the menu button and clicks it
+    actions.move_to_element(menu).click().perform()
+    print('opened menu 1')
+
+def Look_For_Groupinfo():
+    print('Looking for groupinfo button')
+    time.sleep(2)
     try:
         #this looks for the element of groupinformation
         groupinfo = driver.find_element(By.CSS_SELECTOR, "div[aria-label='Groepsinformatie']")
-        if groupinfo.is_displayed():
-            actions.move_to_element(groupinfo).click().perform()
-            time.sleep(2)
-            try:    
-                Add = driver.find_element(By.XPATH, "//*div[contains(text(), 'Lid toevoegen')]") 
-                if Add.is_displayed():
-                    actions.move_to_element(Add).click().perform()
-                    time.sleep(2)
-                    actions.send_keys(contact_name).perform()
-                    time.sleep(2)
-                    try:    
-                        #This checks if the new member is already in the group
-                        allreadyadded = driver.find_element(By.XPATH, "//div[contains(text(), 'Al toegevoegd')]")
-                        if allreadyadded:
-                            print(f'User already part of {line}, continuing with the next group in the list')
-                            failed.write(f'\n{line} -> User already part of group')
-                            close = driver.find_element(By.CSS_SELECTOR, 'div[role="button"][aria-label="Sluiten"]')
-                            actions.move_to_element(close).click().perform()
-                            time.sleep(2)
-                            zoekenannuleren = driver.find_element(By.CSS_SELECTOR, "button[aria-label='Zoeken annuleren']")
-                            actions.move_to_element(zoekenannuleren).click().perform()
-                            time.sleep(2)
-                            continue
-                    except:
-                        pass
+    except:
+        zoekenannuleren = driver.find_element(By.CSS_SELECTOR, "button[aria-label='Zoeken annuleren']")
+        actions.move_to_element(zoekenannuleren).click().perform()
+        return False
+    else:
+        actions.move_to_element(groupinfo).click().perform()
+        print('Opened groupinfo 1')
+        return True
+    
+def Find_Add_Member_Button():
+    time.sleep(1)
+    print('Looking for add member button')
+    try:
+        Add = driver.find_element(By.XPATH, "*//div[contains(text(),'Lid toevoegen')]")
+    except:
+        print(f'Unable to add member, Add button not found')
+        zoekenannuleren = driver.find_element(By.CSS_SELECTOR, "button[aria-label='Zoeken annuleren']")
+        actions.move_to_element(zoekenannuleren).click().perform()
+        return False
+    else:
+        time.sleep(2)
+        actions.move_to_element(Add).click().perform()
+        actions.send_keys(contact_name).perform()
+        print('Opened Add member button 1')
+        time.sleep(2)
+        return True
+    
 
-                    notadded = driver.find_element(By.CSS_SELECTOR, "button[class='i5tg98hk f9ovudaz przvwfww gx1rr48f shdiholb phqmzxqs gtscxtjd ajgl1lbb thr4l2wc cc8mgx9x eta5aym1 d9802myq e4xiuwjv g0rxnol2 ln8gz9je'][ tabindex='-1'][ type='button'][ role='checkbox']")
-                    actions.move_to_element(notadded).click().perform()
-                    time.sleep(2)
-                    confirm1 = driver.find_element(By.CSS_SELECTOR, 'span[aria-label="Bevestigen"]')
-                    actions.move_to_element(confirm1).click().perform()
-                    time.sleep(2)
-                    confirm2 = driver.find_element(By.XPATH," //div[@class='tvf2evcx m0h2a7mj lb5m6g5c j7l1k36l ktfrpxia nu7pwgvd p357zi0d dnb887gk gjuq5ydh i2cterl7 i6vnu1w3 qjslfuze ac2vgrno sap93d0t gndfcl4n'][normalize-space()='Lid toevoegen']")
-                    if confirm2.is_displayed():
-                        actions.move_to_element(confirm2).click().perform()
-                        print(f'Participant has been added to {line}')
-                        success.write('\n'+ line)
-                        zoekenannuleren = driver.find_element(By.CSS_SELECTOR, "button[aria-label='Zoeken annuleren']")
-                        actions.move_to_element(zoekenannuleren).click().perform()
-                    elif not confirm2.is_displayed:
-                        print(f'Unable to find the second confirm button for {line}')
-                        failed.write(f'\n{line} -> unable to find second confirm button')
-                        zoekenannuleren = driver.find_element(By.CSS_SELECTOR, "button[aria-label='Zoeken annuleren']")
-                        actions.move_to_element(zoekenannuleren).click().perform()
-                        continue
-                elif not Add.is_displayed(): 
-                    print(f'Unable to add participant to {line}, as you are not an admin of this group - 1')
-                    failed.write(f'\n{line}-> not an admin for group')
-                    time.sleep(1)
-                    zoekenannuleren = driver.find_element(By.CSS_SELECTOR, "button[aria-label='Zoeken annuleren']")
-                    actions.move_to_element(zoekenannuleren).click().perform()
-                    time.sleep(2) 
-                    continue
-            except:
-                print(f'Unable to find the add button for {line}, probably you are not an admin for this group.')
-                failed.write(f'\nYou are not an admin for {line}')
-                time.sleep(1)
-                close = driver.find_element(By.CSS_SELECTOR, 'div[role="button"][aria-label="Sluiten"]')
-                actions.move_to_element(close).click().perform()
-
-        elif not groupinfo.is_displayed():
-            print(f'Unable to find groupinformation menu for {line}, continuing with next item from the list.')
-            failed.write(f'\n{line}-> Unable to find groupinformation button in menu')
+def Member_In_Group():   
+        #This checks if the new member is already in the group
+        print('Checking if member allready in group')
+        searchresultlist = driver.find_element(By.XPATH, "//div[@class='g0rxnol2 g0rxnol2 thghmljt p357zi0d rjo8vgbg ggj6brxn f8m0rgwh gfz4du6o ag5g9lrv bs7a17vp']")
+        isadded = searchresultlist.find_element(By.CLASS_NAME, 'vQ0w7')
+        if isadded.get_property('innerText') == 'Al toegevoegd aan groep':
+            print(f'{contact_name} already member of {line} 1')
+            time.sleep(1)
+            closewindow = driver.find_element(By.CSS_SELECTOR, "div[role='button'][aria-label='Sluiten']")
+            actions.move_to_element(closewindow).click().perform()
+            time.sleep(1)
             zoekenannuleren = driver.find_element(By.CSS_SELECTOR, "button[aria-label='Zoeken annuleren']")
             actions.move_to_element(zoekenannuleren).click().perform()
-            time.sleep(2)
-            continue
-    except:
-        print(f"Unable to find groupinfo button for {line}")
-        failed.write(f'{line}-> Unable to find groupinfo button')
-else:
-    print(f"{contact_name} has been added to all the groups in the specified list, check the failed.txt and success.txt files to check the end result")
+            return True    
+        else:
+            print('Member not in group')
+            return False
 
+            
+
+"""        
+def Member_not_in_group():
+    confirm = driver.find_element(By.CSS_SELECTOR, "span[aria-label='Bevestigen']")
+    actions.move_to_element(confirm).click().perform()
+    WebDriverWait(driver, 10).until(EC.visibility_of(By.XPATH, '//div[contains(Text(), "Lid toevoegen")]'))
+    confirm2 = driver.find_element(By.XPATH, '//div[contains(Text(), "Lid toevoegen")]')
+    actions.move_to_element(confirm2).click().perform()
+    time.sleep(2)
+    zoekenannuleren = driver.find_element(By.CSS_SELECTOR, "button[aria-label='Zoeken annuleren']")
+    actions.move_to_element(zoekenannuleren).click().perform()
+"""
+
+
+for line in myfile:
+    Search()
+    print('Searchbar found 2')
+    if No_Chats_Found():
+        print('No group/chat found')
+        failed.write(f'{line}> no group found\n')
+        continue
+    else:
+        print('Found a chat 2')
+        Open_Menu()
+        print('Opened menu 2')
+        if Look_For_Groupinfo():
+            print('Opened group info 2')
+            if Find_Add_Member_Button():
+                print('Opened Add member button 2')
+                if Member_In_Group():
+                    print('Member allready in group 2')
+                else:
+                    print('Member not in group 2')
+            else:
+                print('Could not find add button 2')
+        else:
+            print('Groupinfo not found')
+            failed.write(f'{line} > groupinfo not found\n')
+            continue
+
+
+else:
+    print('finised, check success.txt and failed.txt for the results.')
